@@ -172,7 +172,7 @@ Possíveis causas para perdas de desempenho:
 * contenção de CPU quando há muitos processos ativos
 * overhead fixo do modelo produtor-consumidor para o volume de 25 arquivos
 
----
+--
 
 # 11. Conclusão
 
