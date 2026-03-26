@@ -50,7 +50,7 @@ Complexidade aproximada:
 | --------------------------- | --------------------------------------------------- |
 | Processador                 | AMD Ryzen 5 7520U with Radeon Graphics              |
 | Numero de nucleos           | 4 nucleos fisicos (8 threads logicas)              |
-| Memoria RAM                 | 15.28 GB                                            |
+| Memoria RAM                 | 16 GB                                            |
 | Sistema Operacional         | Microsoft Windows 11 Pro 10.0.26200 64 bits        |
 | Linguagem utilizada         | Python                                               |
 | Biblioteca de paralelizacao | multiprocessing (biblioteca padrao do Python)      |
