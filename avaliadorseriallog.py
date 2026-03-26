@@ -41,7 +41,7 @@ def consolidar_resultados(resultados):
 # Processamento de arquivo
 # ===============================
 
-def processar_arquivo(caminho):
+def processar_arquivo(caminho, carga_cpu=100):
     with open(caminho, "r", encoding="utf-8") as f:
         conteudo = f.readlines()
 
@@ -65,8 +65,8 @@ def processar_arquivo(caminho):
             if p in contagem:
                 contagem[p] += 1
 
-        # Simulação de processamento pesado
-        for _ in range(1000):
+        # Simulação de processamento pesado parametrizável
+        for _ in range(carga_cpu):
             pass
 
     return {
@@ -85,16 +85,16 @@ def _produtor(arquivos, fila_tarefas, num_consumidores):
         fila_tarefas.put(None)
 
 
-def _consumidor(fila_tarefas, fila_resultados):
+def _consumidor(fila_tarefas, fila_resultados, carga_cpu):
     while True:
         caminho = fila_tarefas.get()
         if caminho is None:
             break
 
-        fila_resultados.put(processar_arquivo(caminho))
+        fila_resultados.put(processar_arquivo(caminho, carga_cpu=carga_cpu))
 
 
-def executar_paralelo(pasta, num_processos=2, tamanho_buffer=32, exibir=True):
+def executar_paralelo(pasta, num_processos=2, tamanho_buffer=32, exibir=True, carga_cpu=100):
     arquivos = [
         os.path.join(pasta, arquivo)
         for arquivo in os.listdir(pasta)
@@ -117,7 +117,7 @@ def executar_paralelo(pasta, num_processos=2, tamanho_buffer=32, exibir=True):
     consumidores = [
         mp.Process(
             target=_consumidor,
-            args=(fila_tarefas, fila_resultados),
+            args=(fila_tarefas, fila_resultados, carga_cpu),
             daemon=False,
         )
         for _ in range(num_processos)
@@ -154,7 +154,7 @@ def executar_paralelo(pasta, num_processos=2, tamanho_buffer=32, exibir=True):
     return resumo, fim - inicio
 
 
-def executar_serial_com_tempo(pasta):
+def executar_serial_com_tempo(pasta, carga_cpu=100):
     resultados = []
 
     inicio = time.time()
@@ -162,14 +162,14 @@ def executar_serial_com_tempo(pasta):
     for arquivo in os.listdir(pasta):
         caminho = os.path.join(pasta, arquivo)
         if os.path.isfile(caminho):
-            resultados.append(processar_arquivo(caminho))
+            resultados.append(processar_arquivo(caminho, carga_cpu=carga_cpu))
 
     fim = time.time()
     resumo = consolidar_resultados(resultados)
     return resumo, fim - inicio
 
 
-def benchmark(pasta, processos, repeticoes=3, tamanho_buffer=32):
+def benchmark(pasta, processos, repeticoes=3, tamanho_buffer=32, carga_cpu=100):
     estatisticas = {}
     resumo_referencia = None
 
@@ -177,13 +177,14 @@ def benchmark(pasta, processos, repeticoes=3, tamanho_buffer=32):
         tempos = []
         for _ in range(repeticoes):
             if p == 1:
-                resumo, tempo = executar_serial_com_tempo(pasta)
+                resumo, tempo = executar_serial_com_tempo(pasta, carga_cpu=carga_cpu)
             else:
                 resumo, tempo = executar_paralelo(
                     pasta,
                     num_processos=p,
                     tamanho_buffer=tamanho_buffer,
                     exibir=False,
+                    carga_cpu=carga_cpu,
                 )
 
             if resumo_referencia is None:
@@ -215,7 +216,7 @@ def benchmark(pasta, processos, repeticoes=3, tamanho_buffer=32):
 # Execução serial
 # ===============================
 
-def executar_serial(pasta):
+def executar_serial(pasta, carga_cpu=100):
     resultados = []
 
     inicio = time.time()
@@ -223,7 +224,7 @@ def executar_serial(pasta):
     for arquivo in os.listdir(pasta):
         caminho = os.path.join(pasta, arquivo)
 
-        resultado = processar_arquivo(caminho)
+        resultado = processar_arquivo(caminho, carga_cpu=carga_cpu)
         resultados.append(resultado)
 
     fim = time.time()
@@ -264,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--processos",
         type=int,
-        default=2,
+        default=max(2, mp.cpu_count() // 2),
         help="Quantidade de processos consumidores no modo paralelo",
     )
     parser.add_argument(
@@ -279,14 +280,25 @@ if __name__ == "__main__":
         default=3,
         help="Quantidade de repetições para cada configuração no benchmark",
     )
+    parser.add_argument(
+        "--carga",
+        type=int,
+        default=20,
+        help="Carga de CPU simulada por linha (quanto maior, mais lento)",
+    )
     args = parser.parse_args()
 
     if args.modo == "serial":
         print("Executando versão serial...")
-        executar_serial(args.pasta)
+        executar_serial(args.pasta, carga_cpu=args.carga)
     elif args.modo == "paralelo":
         print("Executando versão paralela...")
-        executar_paralelo(args.pasta, num_processos=args.processos, tamanho_buffer=args.buffer)
+        executar_paralelo(
+            args.pasta,
+            num_processos=args.processos,
+            tamanho_buffer=args.buffer,
+            carga_cpu=args.carga,
+        )
     else:
         configuracoes = [1, 2, 4, 8, 12]
         print("Executando benchmark...")
@@ -295,6 +307,7 @@ if __name__ == "__main__":
             configuracoes,
             repeticoes=args.repeticoes,
             tamanho_buffer=args.buffer,
+            carga_cpu=args.carga,
         )
 
         print("\n=== BENCHMARK (MÉDIA) ===")
