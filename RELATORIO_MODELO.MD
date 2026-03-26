@@ -23,10 +23,10 @@ Objetivo da paralelização: reduzir o tempo total de execução mantendo o mesm
 
 Volume de dados processado nos testes (pasta log2):
 
-* 25 arquivos
-* 250000 linhas
-* 5000000 palavras
-* 34170981 caracteres
+* 1000 arquivos
+* 10000000 linhas
+* 200000000 palavras
+* 1366663305 caracteres
 
 Algoritmo utilizado:
 
@@ -80,11 +80,11 @@ Procedimento experimental:
 
 | Nº Threads/Processos | Tempo de Execução (s) |
 | -------------------- | --------------------- |
-| 1                    | 5.4185                |
-| 2                    | 2.6391                |
-| 4                    | 1.7748                |
-| 8                    | 1.5175                |
-| 12                   | 1.5740                |
+| 1                    | 37.5872               |
+| 2                    | 19.6569               |
+| 4                    | 11.2445               |
+| 8                    | 8.4068                |
+| 12                   | 8.3570                |
 
 ---
 
@@ -119,11 +119,11 @@ Onde:
 
 | Threads/Processos | Tempo (s) | Speedup | Eficiência |
 | ----------------- | --------- | ------- | ---------- |
-| 1                 | 5.4185    | 1.0000  | 1.0000     |
-| 2                 | 2.6391    | 2.0531  | 1.0266     |
-| 4                 | 1.7748    | 3.0530  | 0.7633     |
-| 8                 | 1.5175    | 3.5707  | 0.4463     |
-| 12                | 1.5740    | 3.4425  | 0.2869     |
+| 1                 | 37.5872   | 1.0000  | 1.0000     |
+| 2                 | 19.6569   | 1.9122  | 0.9561     |
+| 4                 | 11.2445   | 3.3427  | 0.8357     |
+| 8                 | 8.4068    | 4.4711  | 0.5589     |
+| 12                | 8.3570    | 4.4977  | 0.3748     |
 
 ---
 
@@ -147,7 +147,7 @@ Onde:
 
 # 10. Análise dos Resultados
 
-O speedup não foi linear, mas houve ganho consistente até 8 processos. O melhor tempo foi com 8 processos (1.5175 s), com speedup 3.5707.
+O speedup não foi linear, mas houve ganho consistente até 12 processos. O melhor tempo observado foi com 12 processos (8.3570 s), com speedup 4.4977.
 
 Análise das perguntas propostas:
 
@@ -155,10 +155,10 @@ Análise das perguntas propostas:
 Não. A curva ficou abaixo da ideal, como esperado em cargas reais com overhead.
 
 * A aplicação apresentou escalabilidade?
-Sim, de forma parcial, com ganhos claros até 8 processos.
+Sim, de forma parcial, com ganhos claros de 1 até 12 processos, embora com redução de eficiência em p maiores.
 
 * Em qual ponto a eficiência começou a cair?
-A queda fica mais evidente a partir de 4 processos e continua em 8 e 12.
+A eficiência já cai de p=2 para p=4 e continua reduzindo em p=8 e p=12.
 
 * O número de threads ultrapassa o número de núcleos físicos da máquina?
 Sim. A máquina possui 4 núcleos físicos; 8 e 12 processos ultrapassam esse limite.
@@ -170,19 +170,19 @@ Possíveis causas para perdas de desempenho:
 
 * sincronização e comunicação entre processos
 * contenção de CPU quando há muitos processos ativos
-* overhead fixo do modelo produtor-consumidor para o volume de 25 arquivos
+* overhead fixo do modelo produtor-consumidor para o volume processado
 
---
+---
 
 # 11. Conclusão
 
-O paralelismo trouxe ganho significativo de desempenho nesta máquina, reduzindo de 5.4185 s (serial) para 1.5175 s (8 processos), com speedup 3.5707.
+O paralelismo trouxe ganho significativo de desempenho nesta máquina, reduzindo de 37.5872 s (serial) para 8.3570 s (12 processos), com speedup 4.4977.
 
 Conclusões principais:
 
-* melhor configuração observada: 8 processos
-* o programa escala bem até 8 processos
-* com 12 processos houve regressão em relação a 8, indicando saturação/overhead
+* melhor configuração observada: 12 processos
+* o programa escala de forma consistente até 12 processos
+* a eficiência cai com o aumento de processos, indicando overhead crescente
 
 Melhorias possíveis:
 
